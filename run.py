@@ -32,8 +32,9 @@ for i, img_path in enumerate(selected_images[1:]):
     inference_times.append(results[0].speed['inference'])
 end = time.time()
 duration = end - start
+print(f'Duration = {duration} segundos')
 # Estatísticas
-avg_time_medido = (sum(inference_times)/1000)/len(inference_times)
-avg_time = duration/(len(selected_images)-1)
+avg_time_medido = (sum(inference_times))/len(inference_times)
+avg_time = (duration/(len(selected_images)-1))*1000
 print(f"\n✅ Média de tempo REAL por inferência (n={len(selected_images)-1}): {avg_time:.4f} ms\n")
 print(f"\n✅ Média de tempo APENAS DA INFERENCIA (n={len(selected_images)-1}): {avg_time_medido:.4f} ms")
