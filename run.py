@@ -12,7 +12,7 @@ model_path = 'models/land-seg.engine'
 
 images_path = Path('dataset/landslide_dataset_nicholas/images')
 
-all_images = list(images_path.glob("*.jpg"))
+all_images = sorted(images_path.glob("*.jpg"))
 # selected_images = random.sample(all_images, min(100, len(all_images)))
 selected_images = all_images[:100]
 print(f'Tamanho = {len(all_images)}')
