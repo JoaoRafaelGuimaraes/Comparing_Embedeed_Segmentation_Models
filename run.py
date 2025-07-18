@@ -17,12 +17,14 @@ all_images = sorted(images_path.glob("*.jpg"))
 selected_images = all_images[:100]
 print(f'Tamanho = {len(all_images)}')
 
+
 model = YOLO(model_path)
 
 
 inference_times = []
 
-results = model(selected_images[0]) 
+img = Image.open(selected_images[0])
+results = model(img)
 img = results[0].plot()
 cv.imwrite('outputs/out1.jpg', img)
 start = time.time()
@@ -33,7 +35,8 @@ for i, img_path in enumerate(selected_images[1:]):
 end = time.time()
 duration = end - start
 print(f'Duration = {duration} segundos')
-# Estatísticas
+
+
 avg_time_medido = (sum(inference_times))/len(inference_times)
 avg_time = (duration/(len(selected_images)-1))*1000
 print(f"\n✅ Média de tempo REAL por inferência (n={len(selected_images)-1}): {avg_time:.4f} ms\n")
