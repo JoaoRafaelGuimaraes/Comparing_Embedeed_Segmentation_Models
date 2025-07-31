@@ -1,0 +1,311 @@
+Total images found: 1106
+Loading models/land-seg.engine for TensorRT inference...
+[07/30/2025-23:18:42] [TRT] [I] Loaded engine size: 40 MiB
+[07/30/2025-23:18:42] [TRT] [W] Using an engine plan file across different models of devices is not recommended and is likely to affect performance or even cause errors.
+[07/30/2025-23:18:42] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +24, now: CPU 0, GPU 62 (MiB)
+
+image 1/1 /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_nicholas/images/000000000000.jpg: 512x512 3 lands, 32.6ms
+Speed: 17.7ms preprocess, 32.6ms inference, 212.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 3 lands, 32.5ms
+Speed: 2.2ms preprocess, 32.5ms inference, 5.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 32.4ms
+Speed: 2.2ms preprocess, 32.4ms inference, 6.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.5ms
+Speed: 2.3ms preprocess, 32.5ms inference, 8.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 17.5ms
+Speed: 2.0ms preprocess, 17.5ms inference, 12.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 32.5ms
+Speed: 2.5ms preprocess, 32.5ms inference, 8.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 9 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 13.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 13 lands, 32.8ms
+Speed: 2.8ms preprocess, 32.8ms inference, 11.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 13 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 12.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 12.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 33.0ms
+Speed: 3.1ms preprocess, 33.0ms inference, 12.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 32.5ms
+Speed: 2.9ms preprocess, 32.5ms inference, 15.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.9ms
+Speed: 2.9ms preprocess, 32.9ms inference, 10.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 17.5ms
+Speed: 2.2ms preprocess, 17.5ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 9.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 3 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 9.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 24.8ms
+Speed: 2.4ms preprocess, 24.8ms inference, 9.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 32.6ms
+Speed: 2.7ms preprocess, 32.6ms inference, 9.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 32.6ms
+Speed: 2.9ms preprocess, 32.6ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 32.6ms
+Speed: 3.0ms preprocess, 32.6ms inference, 10.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 9.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 11 lands, 17.5ms
+Speed: 2.5ms preprocess, 17.5ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 24.9ms
+Speed: 2.5ms preprocess, 24.9ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 32.7ms
+Speed: 2.7ms preprocess, 32.7ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.7ms
+Speed: 2.7ms preprocess, 32.7ms inference, 11.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 24.9ms
+Speed: 2.4ms preprocess, 24.9ms inference, 11.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 3 lands, 32.7ms
+Speed: 2.8ms preprocess, 32.7ms inference, 9.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 3 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 9.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.5ms
+Speed: 2.9ms preprocess, 32.5ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 32.6ms
+Speed: 2.9ms preprocess, 32.6ms inference, 11.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 32.7ms
+Speed: 2.9ms preprocess, 32.7ms inference, 11.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 9 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 32.6ms
+Speed: 2.9ms preprocess, 32.6ms inference, 11.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 11.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 10.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 10.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 24.8ms
+Speed: 2.4ms preprocess, 24.8ms inference, 11.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.4ms
+Speed: 2.7ms preprocess, 32.4ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 24.8ms
+Speed: 2.4ms preprocess, 24.8ms inference, 8.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 4 lands, 32.4ms
+Speed: 2.7ms preprocess, 32.4ms inference, 9.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 9.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 9.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 24.9ms
+Speed: 2.5ms preprocess, 24.9ms inference, 9.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 9 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 10.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 10 lands, 32.9ms
+Speed: 2.7ms preprocess, 32.9ms inference, 11.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 10 lands, 32.8ms
+Speed: 2.8ms preprocess, 32.8ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 13 lands, 17.7ms
+Speed: 2.7ms preprocess, 17.7ms inference, 10.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 24.9ms
+Speed: 2.5ms preprocess, 24.9ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.3ms
+Speed: 2.8ms preprocess, 32.3ms inference, 9.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 17.5ms
+Speed: 2.3ms preprocess, 17.5ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 24.8ms
+Speed: 2.4ms preprocess, 24.8ms inference, 10.3ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.6ms preprocess, 32.5ms inference, 11.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.6ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 31.7ms
+Speed: 2.7ms preprocess, 31.7ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 17.5ms
+Speed: 2.1ms preprocess, 17.5ms inference, 10.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 25.4ms
+Speed: 2.5ms preprocess, 25.4ms inference, 11.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.6ms
+Speed: 2.6ms preprocess, 32.6ms inference, 9.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 9.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 32.5ms
+Speed: 2.9ms preprocess, 32.5ms inference, 10.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 32.5ms
+Speed: 2.9ms preprocess, 32.5ms inference, 10.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 9.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 9 lands, 17.5ms
+Speed: 2.5ms preprocess, 17.5ms inference, 9.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 12 lands, 25.1ms
+Speed: 2.5ms preprocess, 25.1ms inference, 10.1ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 11 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 10.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 13 lands, 32.3ms
+Speed: 2.8ms preprocess, 32.3ms inference, 10.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 17.5ms
+Speed: 2.5ms preprocess, 17.5ms inference, 10.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 24.8ms
+Speed: 2.4ms preprocess, 24.8ms inference, 10.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 17 lands, 32.5ms
+Speed: 2.6ms preprocess, 32.5ms inference, 15.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.7ms
+Speed: 2.7ms preprocess, 32.7ms inference, 12.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 15 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 12.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 16 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 12.2ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.7ms preprocess, 32.5ms inference, 11.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 5 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 9.5ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 9.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 6 lands, 17.8ms
+Speed: 2.6ms preprocess, 17.8ms inference, 9.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 7 lands, 24.9ms
+Speed: 2.5ms preprocess, 24.9ms inference, 9.7ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 8 lands, 32.6ms
+Speed: 2.8ms preprocess, 32.6ms inference, 9.9ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 9 lands, 32.6ms
+Speed: 2.9ms preprocess, 32.6ms inference, 10.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 11 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 10 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.0ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 13 lands, 32.5ms
+Speed: 2.8ms preprocess, 32.5ms inference, 11.8ms postprocess per image at shape (1, 3, 512, 512)
+
+0: 512x512 14 lands, 32.6ms
+Speed: 2.9ms preprocess, 32.6ms inference, 10.4ms postprocess per image at shape (1, 3, 512, 512)
+
+Número de Amostras n = 100
+Tempo total: 6.94 segundos
+✅ Média de tempo REAL por inferência: 70.1057 ms
+✅ Média de tempo APENAS DA INFERÊNCIA: 29.4983 ms
+ Média de IoU sobre 907 bounding boxes: 0.9568
