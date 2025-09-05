@@ -13,7 +13,7 @@ model = YOLO(model_path)
 
 images_path = Path('dataset/landslide_dataset_nicholas/images')
 all_images = sorted(images_path.glob("*.jpg"))
-selected_images = all_images[:10]
+selected_images = all_images[:100]
 print(f'Total images found: {len(all_images)}')
 
 

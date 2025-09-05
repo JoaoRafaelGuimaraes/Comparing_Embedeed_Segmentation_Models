@@ -1,0 +1,15 @@
+
+Benchmarks complete for models/land-seg.pt on dataset/landslide_dataset_1000/data.yml at imgsz=512 (0.45s)
+Benchmarks legend:  - ✅ Success  - ❎ Export passed but validation failed  - ❌️ Export failed
+     Format Status❔  Size (MB) metrics/mAP50-95(M) Inference time (ms/im) FPS
+0  TensorRT       ❌        0.0                   -                      -   -
+
+Benchmarks complete for models/land-seg.pt on dataset/landslide_dataset_1000/data.yml at imgsz=512 (10.36s)
+Benchmarks legend:  - ✅ Success  - ❎ Export passed but validation failed  - ❌️ Export failed
+  Format Status❔  Size (MB) metrics/mAP50-95(M) Inference time (ms/im) FPS
+0   ONNX       ❎       38.6                   -                      -   -
+
+Benchmarks complete for models/land-seg.pt on dataset/landslide_dataset_1000/data.yml at imgsz=512 (1.17s)
+Benchmarks legend:  - ✅ Success  - ❎ Export passed but validation failed  - ❌️ Export failed
+    Format Status❔  Size (MB) metrics/mAP50-95(M) Inference time (ms/im) FPS
+0  PyTorch       ❎       19.6                   -                      -   -
