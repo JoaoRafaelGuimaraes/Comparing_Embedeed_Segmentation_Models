@@ -1,2 +1,5 @@
 models/
 dataset/
+benchmarks.log
+runs/
+outputs

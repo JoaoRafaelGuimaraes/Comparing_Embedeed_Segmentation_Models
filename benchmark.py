@@ -34,4 +34,3 @@ for format in my_formats:
     else:
         print(f'Linhas adicionadas ao arquivo CSV salvo em {csv_path}')
         df.to_csv(csv_path, index=False,mode='a', header='False')
-
