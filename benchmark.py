@@ -2,7 +2,7 @@ from ultralytics.utils.benchmarks import benchmark
 import pandas as pd
 import sys
 import os
-
+# Precision, Recall e F1 score
 
 if (len(sys.argv) < 2):
     print('Por favor, complete os campos:\npython3 benchmark.py <device> (CPU ou GPU)')
