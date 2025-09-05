@@ -23,7 +23,9 @@ my_formats = formats_CPU if arg=='CPU' else formats_GPU
 csv_path = "bench_results.csv"
 
 for format in my_formats:
-    if format != '':
+    if arg == 'GPU':
+        results = benchmark(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format, device =0)
+    else: 
         results = benchmark(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format)
     df = pd.DataFrame(results)
     df['device'] = device
