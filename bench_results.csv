@@ -2,7 +2,4 @@ Format,Status❔,Size (MB),metrics/mAP50-95(M),Inference time (ms/im),FPS,device
 ONNX,✅,38.6,0.6626,168.78,5.92,Notebook
 Format,Status❔,Size (MB),metrics/mAP50-95(M),Inference time (ms/im),FPS,device
 PyTorch,✅,19.6,0.6939,282.84,3.54,Notebook
-Format,Status❔,Size (MB),metrics/mAP50-95(M),Inference time (ms/im),FPS,device
-ONNX,✅,38.6,0.6626,126.27,7.92,Notebook
-Format,Status❔,Size (MB),metrics/mAP50-95(M),Inference time (ms/im),FPS,device
-PyTorch,✅,19.6,0.6939,212.83,4.7,Notebook
+
