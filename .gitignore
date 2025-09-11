@@ -1,6 +1,7 @@
 models/
-dataset/landslide_dataset_1000
+dataset/
 benchmarks.log
 runs/
 outputs/
 benchmarks.log
+venv/

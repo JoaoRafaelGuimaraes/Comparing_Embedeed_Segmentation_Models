@@ -2,6 +2,7 @@ from ultralytics.utils.benchmarks import benchmark
 import pandas as pd
 import sys
 import os
+from benchmark_PI import benchmark_PI
 # Precision, Recall e F1 score
 
 if (len(sys.argv) < 2):
@@ -24,10 +25,15 @@ csv_path = "bench_results.csv"
 
 for format in my_formats:
     if arg == 'GPU':
-        results = benchmark(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format, device =0)
+        results = benchmark_PI(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format, device =0)
     else: 
-        results = benchmark(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format)
+        results = benchmark_PI(model="models/land-seg.pt", data="dataset/landslide_dataset_1000/data.yml", imgsz=512, format=format)
     df = pd.DataFrame(results)
+    if isinstance(results, (list, tuple)) and len(results) >= 2 and isinstance(results[0], (list, tuple)):
+        df = pd.DataFrame(results[1:], columns=results[0])
+    else:
+        df = pd.DataFrame(results)
+
     df['device'] = device
 
     if not os.path.exists(csv_path):
