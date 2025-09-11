@@ -320,3 +320,5 @@ def benchmark_PI(model: str,
             "power_avg (W)": np.nan,
             "error": str(e),
         }]
+
+
