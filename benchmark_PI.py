@@ -1,76 +1,50 @@
-# -*- coding: utf-8 -*-
-import os, time, glob, yaml, math
+
+import os, time, glob, yaml, math, shutil
 import numpy as np
 import psutil
-
-try:
-    import pynvml
-    pynvml.nvmlInit()
-    _NVML_OK = True
-except Exception:
-    _NVML_OK = False
-
+from pathlib import Path
+import subprocess, re
 from ultralytics import YOLO
+from gpu_monitor import TegrastatsMonitor
+from ultralytics.cfg import TASK2DATA, TASK2METRIC
 
-# ----------------------------
-# GPU/CPU monitor (por processo)
-# ----------------------------
-def _get_gpu_handle_or_none(index=0):
-    if not _NVML_OK:
-        return None
-    try:
-        return pynvml.nvmlDeviceGetHandleByIndex(index)
-    except Exception:
-        return None
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-_GPU_HANDLE = _get_gpu_handle_or_none(0)
 PROC = psutil.Process(os.getpid())
 PID = os.getpid()
 
-def get_system_usage():
-    """
-    Retorna (cpu_proc%, ram_proc_MB, gpu_global%, vram_global_MB, power_W, vram_proc_MB).
-    - CPU/RAM: do processo atual
-    - GPU/power: globais (placa inteira)
-    - VRAM_proc: VRAM usada por ESTE processo (se disponível)
-    """
-    # CPU% do processo; para leituras estáveis, esta função deve ser chamada em momentos diferentes
+def get_system_usage(device):
+
     cpu_proc = PROC.cpu_percent(interval=None)
     ram_proc_mb = PROC.memory_info().rss / (1024 ** 2)
+    return cpu_proc, ram_proc_mb
 
-    gpu_usage = 0.0
-    vram_usage_mb = 0.0
-    power_watts = 0.0
-    vram_proc_mb = 0.0
+def get_tegrastats():
+    try:
+        out = subprocess.check_output(
+            ['tegrastats', '--interval', '1000', '--count', '1'],
+            stderr=subprocess.DEVNULL
+        )
+        line = out.decode('utf-8')
+    except Exception:
+        return 0.0, 0.0, 0.0
 
-    if _GPU_HANDLE is not None:
-        try:
-            util = pynvml.nvmlDeviceGetUtilizationRates(_GPU_HANDLE)
-            mem = pynvml.nvmlDeviceGetMemoryInfo(_GPU_HANDLE)
-            power = pynvml.nvmlDeviceGetPowerUsage(_GPU_HANDLE) / 1000.0
+    # GPU %
+    gpu_match = re.search(r'GR3D_FREQ (\d+)%', line)
+    gpu_usage = float(gpu_match.group(1)) if gpu_match else 0.0
 
-            gpu_usage = float(util.gpu)                      # % global da GPU
-            vram_usage_mb = float(mem.used) / (1024 ** 2)    # VRAM global (MB)
-            power_watts = float(power)                       # potência global (W)
+    # GPU Power (em mW → W)
+    pwr_match = re.search(r'POM_5V_GPU (\d+)mW', line)
+    power_watts = float(pwr_match.group(1))/1000 if pwr_match else 0.0
 
-            # VRAM do processo atual (MB)
-            try:
-                procs = pynvml.nvmlDeviceGetComputeRunningProcesses(_GPU_HANDLE)
-                for p in procs:
-                    if getattr(p, "pid", None) == PID:
-                        vram_proc_mb = float(p.usedGpuMemory) / (1024 ** 2)
-                        break
-            except Exception:
-                pass
-        except Exception:
-            pass
+    # RAM usada (MB)
+    ram_match = re.search(r'RAM (\d+)/(\d+)MB', line)
+    ram_used_mb = float(ram_match.group(1)) if ram_match else 0.0
+    # ram_total_mb = float(ram_match.group(2))  # se quiser o total também
 
-    return cpu_proc, ram_proc_mb, gpu_usage, vram_usage_mb, power_watts, vram_proc_mb
+    return gpu_usage, power_watts, ram_used_mb
 
 
-# ----------------------------
-# Helpers
-# ----------------------------
 def _format_label(fmt: str) -> str:
     fmt = (fmt or "-").lower()
     if fmt in ["-", "pt", "pytorch"]:
@@ -81,20 +55,58 @@ def _format_label(fmt: str) -> str:
         return "TensorRT"
     return fmt.upper()
 
-def _export_if_needed(model: YOLO, fmt: str, device=None):
-    """Exporta se fmt != '-' e retorna (modelo_infer, caminho_artefato_ou_None)."""
+def _export_if_needed(model: YOLO, format: str, device=None):
+    print('Verificando necessidade de Exportar o Modelo\n')
+    if format.startswith('engine'):
+        fmt = 'engine'
+    else:
+        fmt = format
+    
     fmt = (fmt or "-").lower()
     if fmt in ["-", "pt", "pytorch"]:
         return model, None
-    exported = model.export(format=fmt, device=device)
+    save_dir = Path(f'{BASE_DIR}/models')
+
+    if format == 'engineFP16':
+        export_path = os.path.join(save_dir, 'land-segFP16.engine')
+    elif format == 'engineFP32':
+        export_path = os.path.join(save_dir, 'land-segFP32.engine')
+    elif format == 'onnx':
+        export_path = os.path.join(save_dir, 'land-seg.onnx')
+   
+    if os.path.exists(export_path):
+        model_infer = YOLO(export_path) 
+        print('Modelo Já exportado, pulando exportação.')
+        return model_infer, export_path
+
+    print(f'Modelo .{fmt} não encontrado, iniciando exportação\n')
+
+    if format == 'engineFP16':
+        exported = model.export(format="engine", device=0, half=True, dynamic=False, nms=True)
+    else:
+        exported = model.export(format=fmt, device=device)
     export_path = None
+    
+
     if isinstance(exported, str) and os.path.exists(exported):
         export_path = exported
     elif hasattr(exported, "save_dir"):
         ext = "engine" if fmt == "engine" else fmt
         cands = glob.glob(os.path.join(exported.save_dir, f"*.{ext}"))
         export_path = cands[0] if cands else None
+    
+
+    if format == 'engineFP16':
+        new_path = os.path.join(os.path.dirname(export_path), 'land-segFP16.engine')
+        shutil.move(export_path, new_path)
+        export_path = new_path
+    elif format == 'engineFP32':
+        new_path = os.path.join(os.path.dirname(export_path), 'land-segFP32.engine')
+        shutil.move(export_path, new_path)
+        export_path = new_path
+    
     model_infer = YOLO(export_path) if export_path else model
+    
     return model_infer, export_path
 
 def _model_size_mb(path_or_weights) -> float:
@@ -130,68 +142,38 @@ def _load_val_image_paths(data_yaml_path: str):
         raise ValueError("Nenhuma imagem de validação encontrada a partir de 'val' em data.yml")
     return paths
 
-def _safe_val_metrics_seg(yolo_model: YOLO, data, imgsz, device):
-    """
-    Tenta extrair métricas de SEGMENTAÇÃO do model.val().
-    Retorna dicionário com chaves normalizadas para máscara.
-    """
+def get_val_metrics(yolo_model: YOLO, data, imgsz, device):
     try:
-        vr = yolo_model.val(data=data, imgsz=imgsz, device=device, verbose=False, plots=False)
-        if hasattr(vr, "results_dict") and isinstance(vr.results_dict, dict):
-            md = vr.results_dict
-        elif hasattr(vr, "metrics") and hasattr(vr.metrics, "results_dict"):
-            md = vr.metrics.results_dict
-        else:
-            md = {}
-    except Exception:
-        md = {}
+        vr = yolo_model.val(
+            data=data, imgsz=imgsz, device=device,
+            plots=False, verbose=False, conf=0.001, batch=1
+        )
+        md = getattr(vr, "results_dict", None) or getattr(getattr(vr, "metrics", None), "results_dict", None) or {}
+    except Exception as e:
+        # LOGAR pra não “sumir”
+        print(f"[val] falhou: {type(e).__name__}: {e}")
+        return {}
 
-    out = {}
+    if not isinstance(md, dict) or not md:
+        print("[val] results_dict vazio")
+        return {}
 
-    seg_map_keys = [
-        "metrics/seg/mAP50-95",
-        "metrics/mAP50-95(M)",
-        "metrics/mAP50-95(seg)",
-    ]
-    for k in seg_map_keys:
-        if k in md:
-            out["metrics/seg/mAP50-95"] = md[k]
-            break
+    return md  # devolva TUDO e trate depois
 
-    for k in ["metrics/seg/mAP50", "metrics/mAP50(M)"]:
-        if k in md:
-            out["metrics/seg/mAP50"] = md[k]
-            break
-
-    for src in ["metrics/seg/precision", "metrics/precision(M)", "metrics/precision"]:
-        if src in md:
-            out["metrics/seg/precision"] = md[src]
-            break
-    for src in ["metrics/seg/recall", "metrics/recall(M)", "metrics/recall"]:
-        if src in md:
-            out["metrics/seg/recall"] = md[src]
-            break
-    for src in ["metrics/seg/f1", "metrics/f1(M)", "metrics/f1"]:
-        if src in md:
-            out["metrics/seg/f1"] = md[src]
-            break
-
-    for src in ["metrics/seg/accuracy", "metrics/accuracy", "metrics/acc"]:
-        if src in md:
-            out["metrics/seg/accuracy"] = md[src]
-            break
-
-    if "metrics/seg/mAP50-95" not in out:
-        for k in ["metrics/mAP50-95(M)", "metrics/mAP50-95"]:
-            if k in md:
-                out["metrics/seg/mAP50-95"] = md[k]
-                break
-
-    return out
-
+def warm_up(model, imgsz, device, test_paths='dataset/landslide_dataset_1000/test/images'):
+    print('Aquecendo o modelo\n')
+    for _ in range(3):
+        for img_path in os.listdir(test_paths)[:5]:  # Usar as primeiras 5 imagens para aquecimento
+            _ = model.predict(
+                source=os.path.join(test_paths, img_path),
+                imgsz=imgsz,
+                device=device,
+                verbose=False
+            )
+    print('Aquecimento concluído\n')
 
 # ----------------------------
-# FUNÇÃO PRINCIPAL (SEGMENTAÇÃO)
+# FUNÇÃO PRINCIPAL 
 # ----------------------------
 def benchmark_PI(model: str,
                  data: str,
@@ -199,104 +181,117 @@ def benchmark_PI(model: str,
                  format: str = "-",
                  device=None,
                  limit: int = None):
-    """
-    Benchmark para MODELOS DE SEGMENTAÇÃO (YOLO-Seg).
-    Mede tempo de inferência, uso de recursos e métricas de MÁSCARA.
-    Retorna [ {coluna: valor} ] pronto para DataFrame/CSV.
-    """
     status = "✅"
     fmt_label = _format_label(format)
     size_mb = np.nan
 
     try:
-        # 1) Carrega pesos
+        
         base = YOLO(model)
 
-        # 2) Exporta se necessário (ONNX/TRT) e reabre para inferência
-        infer_model, export_artifact = _export_if_needed(base, format, device=device)
+        infer_model, export_artifact = _export_if_needed(base, format, device=device) 
+        
         size_mb = _model_size_mb(export_artifact if export_artifact else model)
 
-        # 3) Carrega caminhos de validação
         val_paths = _load_val_image_paths(data)
-        if limit is not None and isinstance(limit, int) and limit > 0:
+        if limit is not None and isinstance(limit, int) and limit > 0: #Caso seja preciso reduzir o numero de imagens
             val_paths = val_paths[:limit]
 
-        # 4) Loop de inferência
-        inf_times = []
+        warm_up(infer_model, imgsz, device)
+        monitor = None
+        if device == 0:
+            print(f'Iniciando Monitor_GPU')
+            monitor = TegrastatsMonitor(interval_ms=100)  # 10 amostras/s
+            monitor.start()
+        print(f'Testando com {len(val_paths)} imagens!')
+        avg_time = []
         cpu_usages, ram_usages = [], []
-        gpu_usages, vram_usages, power_usages = [], [], []
-        vram_proc_usages = []
+        inf_time = 0.0
 
         total_start = time.time()
         for img_path in val_paths:
-            cpu_b, ram_b, gpu_b, vram_b, pwr_b, vram_proc_b = get_system_usage()
+            cpu_b, ram_b = get_system_usage(device)
             t0 = time.time()
 
-            _ = infer_model.predict(
+            results = infer_model.predict(
                 source=img_path,
                 imgsz=imgsz,
                 device=device,
                 verbose=False
             )
-
+            
+            inf_time += results[0].speed['inference']  # tempo de inferência em ms
             dt = (time.time() - t0)
-            cpu_a, ram_a, gpu_a, vram_a, pwr_a, vram_proc_a = get_system_usage()
+            cpu_a, ram_a = get_system_usage(device)
 
-            inf_times.append(dt)
+            avg_time.append(dt)
             cpu_usages.append((cpu_b + cpu_a) / 2.0)
             ram_usages.append((ram_b + ram_a) / 2.0)
-            gpu_usages.append((gpu_b + gpu_a) / 2.0)
-            vram_usages.append((vram_b + vram_a) / 2.0)
-            power_usages.append((pwr_b + pwr_a) / 2.0)
-            vram_proc_usages.append((vram_proc_b + vram_proc_a) / 2.0)
 
         total_time = max(1e-9, time.time() - total_start)
-        n_imgs = len(inf_times)
+        n_imgs = len(avg_time)
+        inf_time = inf_time/n_imgs if n_imgs else 0.0
 
-        mean_ms = (np.mean(inf_times) * 1000.0) if n_imgs else np.nan
+        mean_ms = (np.mean(avg_time) * 1000.0) if n_imgs else np.nan
         fps = (1000.0 / mean_ms) if mean_ms and mean_ms > 0 else 0.0
         throughput = (n_imgs / total_time) if total_time > 0 else 0.0
 
-        # 5) Métricas de SEGMENTAÇÃO do val()
-        metrics = _safe_val_metrics_seg(infer_model, data=data, imgsz=imgsz, device=device)
+        ###
+        gpu_avg = power_avg = ram_total_used_avg = np.nan
+        if monitor:
+            gpu_avg, power_avg, ram_total_used_avg = monitor.stop_and_get()
 
-        def _r(x, nd=4):
-            try:
-                v = float(x)
-                if math.isnan(v):
-                    return np.nan
-                return round(v, nd)
-            except Exception:
-                return np.nan
+        metrics = get_val_metrics(infer_model, data=data, imgsz=imgsz, device=device)
+
 
         row = {
             "Format": fmt_label,
             "Status❔": status,
             "Size (MB)": size_mb,
 
-            # --- métricas de MÁSCARA ---
-            "metrics/seg/mAP50-95": _r(metrics.get("metrics/seg/mAP50-95"), 4),
-            "metrics/seg/mAP50": _r(metrics.get("metrics/seg/mAP50"), 4),
-            "metrics/seg/precision": _r(metrics.get("metrics/seg/precision"), 4),
-            "metrics/seg/recall": _r(metrics.get("metrics/seg/recall"), 4),
-            "metrics/seg/f1": _r(metrics.get("metrics/seg/f1"), 4),
-            "metrics/seg/accuracy": _r(metrics.get("metrics/seg/accuracy"), 4),
-
             # --- desempenho ---
-            "Inference time (ms/im)": round(mean_ms, 2) if mean_ms == mean_ms else np.nan,
+            'Inference Time(ms/im)': round(inf_time, 2) if inf_time == inf_time else np.nan,
+            "Avarage Processing Time (ms/im)": round(mean_ms, 2) if mean_ms == mean_ms else np.nan,
             "FPS": round(fps, 2),
             "Throughput (img/s)": round(throughput, 2),
 
-            # --- recursos (por processo quando possível) ---
+            # --- recursos ---
             "cpu_proc_avg (%)": round(float(np.mean(cpu_usages)) if cpu_usages else np.nan, 2),
             "ram_proc_mb (MB)": round(float(np.mean(ram_usages)) if ram_usages else np.nan, 1),
-            "gpu_avg (%)": round(float(np.mean(gpu_usages)) if gpu_usages else np.nan, 2),           # global
-            "vram_avg_mb (MB)": round(float(np.mean(vram_usages)) if vram_usages else np.nan, 1),   # global
-            "vram_proc_mb (MB)": round(float(np.mean(vram_proc_usages)) if vram_proc_usages else np.nan, 1),
-            "power_avg (W)": round(float(np.mean(power_usages)) if power_usages else np.nan, 2),
-        }
 
+            "gpu_avg (%)": round(gpu_avg, 2) if gpu_avg==gpu_avg else np.nan,
+            "power_avg (W)": round(power_avg, 2) if power_avg==power_avg else np.nan,
+            "ram_total_mb (MB)": round(ram_total_used_avg, 1) if ram_total_used_avg==ram_total_used_avg else np.nan
+        }
+        # === adicionar a métrica principal dinamicamente ===
+        def _r(x, nd=4):
+            try:
+                v = float(x)
+                return np.nan if math.isnan(v) else round(v, nd)
+            except Exception:
+                return np.nan
+
+        if isinstance(metrics, dict) and metrics:
+            key = TASK2METRIC.get(infer_model.task, None) 
+            print(f'\nA task é {infer_model.task}, métrica principal: {key}\n')
+            if key:
+                row[key] = _r(metrics.get(key))
+
+            
+            for k in ("metrics/precision(B)", "metrics/recall(B)", "metrics/mAP50(B)",
+                    "metrics/precision(M)", "metrics/recall(M)", "metrics/mAP50(M)"):
+                if k in metrics:
+                    row[k] = _r(metrics[k])
+        else:
+            print("[val] sem métricas (checar data.yaml, labels e compatibilidade da task)")
+
+        if format == 'engineFP16':
+            row['Format'] = 'TensorRT FP16'
+        elif format == 'engineFP32':
+            row['Format'] = 'TensorRT FP32'
         return [row]
+
+
 
     except Exception as e:
         return [{

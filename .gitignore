@@ -5,3 +5,5 @@ runs/
 outputs/
 benchmarks.log
 venv/
+__pycache__/
+*.pyc
