@@ -7,11 +7,14 @@ import subprocess, re
 from ultralytics import YOLO
 from gpu_monitor import TegrastatsMonitor
 from ultralytics.cfg import TASK2DATA, TASK2METRIC
-
+from collections import defaultdict
+import cv2
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 PROC = psutil.Process(os.getpid())
 PID = os.getpid()
+
+
 
 def get_system_usage(device):
 
@@ -53,6 +56,8 @@ def _format_label(fmt: str) -> str:
         return "ONNX"
     if fmt in ["engine", "tensorrt", "trt"]:
         return "TensorRT"
+    if fmt in ['deeplab']:
+        return 'DeepLab'
     return fmt.upper()
 
 def _export_if_needed(model: YOLO, format: str, device=None):
@@ -150,7 +155,6 @@ def get_val_metrics(yolo_model: YOLO, data, imgsz, device):
         )
         md = getattr(vr, "results_dict", None) or getattr(getattr(vr, "metrics", None), "results_dict", None) or {}
     except Exception as e:
-        # LOGAR pra não “sumir”
         print(f"[val] falhou: {type(e).__name__}: {e}")
         return {}
 
@@ -158,7 +162,21 @@ def get_val_metrics(yolo_model: YOLO, data, imgsz, device):
         print("[val] results_dict vazio")
         return {}
 
-    return md  # devolva TUDO e trate depois
+    return md 
+
+
+def compute_metrics(gt_mask, pred_mask):
+    tp = np.logical_and(gt_mask, pred_mask).sum()
+    fp = np.logical_and(~gt_mask, pred_mask).sum()
+    fn = np.logical_and(gt_mask, ~pred_mask).sum()
+    tn = np.logical_and(~gt_mask, ~pred_mask).sum()
+
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    iou = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+    accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0
+    return precision, recall, iou, f1, accuracy
 
 def warm_up(model, imgsz, device, test_paths='dataset/landslide_dataset_1000/test/images'):
     print('Aquecendo o modelo\n')
@@ -186,11 +204,23 @@ def benchmark_PI(model: str,
     size_mb = np.nan
 
     try:
-        
-        base = YOLO(model)
+        if fmt_label != 'DeepLab':
+            
+            base = YOLO(model)
+            infer_model, export_artifact = _export_if_needed(base, format, device=device) 
+        else:
+            print('Usando modelo DeepLab para inferência\n')
+            from deep_lab import DeepLab
+            deep_lab_path = model.replace('.pt', '.pth')
+            print(f'Procurando o modelo DeepLab em {deep_lab_path}')
+            if not os.path.exists(deep_lab_path):
+                print('Não foi possível encontrar o modelo DeepLab, verifique o caminho e extensão (.pth)')
+                raise FileNotFoundError(f'Modelo DeepLab não encontrado em {deep_lab_path}')
+            
+            infer_model = DeepLab(num_classes=2, model_path=deep_lab_path)
+            print('Modelo DeepLab carregado com sucesso\n')
+            export_artifact = model
 
-        infer_model, export_artifact = _export_if_needed(base, format, device=device) 
-        
         size_mb = _model_size_mb(export_artifact if export_artifact else model)
 
         val_paths = _load_val_image_paths(data)
@@ -207,6 +237,7 @@ def benchmark_PI(model: str,
         avg_time = []
         cpu_usages, ram_usages = [], []
         inf_time = 0.0
+        metrics = {"iou": [], "precision": [], "recall": [], "f1": [], "accuracy": []}
 
         total_start = time.time()
         for img_path in val_paths:
@@ -219,6 +250,24 @@ def benchmark_PI(model: str,
                 device=device,
                 verbose=False
             )
+
+            if fmt_label != 'DeepLab':
+                masks = results[0].masks.data.cpu().numpy()
+                binary_mask = np.any(masks > 0.5, axis=0).astype(np.uint8)  # [H,W] com 0/1
+                prediction = binary_mask * 255
+            else:
+                prediction = results[0].prediction == 1
+            
+            gt_path = img_path.replace('images', 'masks').replace('.jpg', '.png')
+            gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE) > 0
+            prec, rec, iou, f1, acc = compute_metrics(gt, prediction)
+
+            metrics["precision"].append(prec)
+            metrics["recall"].append(rec)
+            metrics["iou"].append(iou)
+            metrics["f1"].append(f1)
+            metrics["accuracy"].append(acc)
+            
             
             inf_time += results[0].speed['inference']  # tempo de inferência em ms
             dt = (time.time() - t0)
@@ -241,8 +290,13 @@ def benchmark_PI(model: str,
         if monitor:
             gpu_avg, power_avg, ram_total_used_avg = monitor.stop_and_get()
 
-        metrics = get_val_metrics(infer_model, data=data, imgsz=imgsz, device=device)
+        metrics_yolo = get_val_metrics(infer_model, data=data, imgsz=imgsz, device=device)
 
+        precision = np.mean(metrics["precision"])
+        recall = np.mean(metrics["recall"])
+        iou = np.mean(metrics["iou"])
+        f1 = np.mean(metrics["f1"])
+        accuracy = np.mean(metrics["accuracy"])
 
         row = {
             "Format": fmt_label,
@@ -261,7 +315,15 @@ def benchmark_PI(model: str,
 
             "gpu_avg (%)": round(gpu_avg, 2) if gpu_avg==gpu_avg else np.nan,
             "power_avg (W)": round(power_avg, 2) if power_avg==power_avg else np.nan,
-            "ram_total_mb (MB)": round(ram_total_used_avg, 1) if ram_total_used_avg==ram_total_used_avg else np.nan
+            "ram_total_mb (MB)": round(ram_total_used_avg, 1) if ram_total_used_avg==ram_total_used_avg else np.nan,
+
+            # --- métricas de validação ---
+
+            "precision": round(precision, 4),
+            "recall": round(recall, 4),
+            "iou": round(iou, 4),
+            "f1": round(f1, 4),
+            "accuracy": round(accuracy, 4)
         }
         # === adicionar a métrica principal dinamicamente ===
         def _r(x, nd=4):
@@ -271,17 +333,17 @@ def benchmark_PI(model: str,
             except Exception:
                 return np.nan
 
-        if isinstance(metrics, dict) and metrics:
+        if isinstance(metrics_yolo, dict) and metrics_yolo:
             key = TASK2METRIC.get(infer_model.task, None) 
             print(f'\nA task é {infer_model.task}, métrica principal: {key}\n')
             if key:
-                row[key] = _r(metrics.get(key))
+                row[key] = _r(metrics_yolo.get(key))
 
             
             for k in ("metrics/precision(B)", "metrics/recall(B)", "metrics/mAP50(B)",
                     "metrics/precision(M)", "metrics/recall(M)", "metrics/mAP50(M)"):
-                if k in metrics:
-                    row[k] = _r(metrics[k])
+                if k in metrics_yolo:
+                    row[f'{k} (YOLO)'] = _r(metrics_yolo[k])
         else:
             print("[val] sem métricas (checar data.yaml, labels e compatibilidade da task)")
 
