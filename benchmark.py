@@ -17,8 +17,8 @@ if len(sys.argv)>2 and sys.argv[2] == '-d' and len(sys.argv)>3:
 
 
 print(f'Rodando em uma {arg}, eu um {device}\n')
-formats_CPU = ['onnx', '-'] #Na cpu, roda apenas onxx e PyTorch
-formats_GPU = ['engineFP32','engineFP16', 'onnx', '-'] #Na gpu, roda engine, onxx e PyTorch normal
+formats_CPU = ['onnx', '-', 'deeplab'] #Na cpu, roda apenas onxx e PyTorch
+formats_GPU = ['engineFP32','engineFP16', 'onnx', '-', 'deeplab'] #Na gpu, roda engine, onxx e PyTorch normal
 
 my_formats = formats_CPU if arg=='CPU' else formats_GPU
 

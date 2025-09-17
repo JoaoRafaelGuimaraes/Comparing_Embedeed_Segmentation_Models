@@ -178,7 +178,7 @@ def compute_metrics(gt_mask, pred_mask):
     accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0
     return precision, recall, iou, f1, accuracy
 
-def warm_up(model, imgsz, device, test_paths='dataset/landslide_dataset_1000/test/images'):
+def warm_up(model, imgsz, device, test_paths='dataset/landslide_dataset_1000/valid/images'):
     print('Aquecendo o modelo\n')
     for _ in range(3):
         for img_path in os.listdir(test_paths)[:5]:  # Usar as primeiras 5 imagens para aquecimento

@@ -11,7 +11,7 @@ class TegrastatsMonitor:
         self.power = []
         self.ram_used = []
         self._re_gpu = re.compile(r'GR3D_FREQ\s+(\d+)%')
-        self._re_pwr = re.compile(r'POM_5V_GPU\s+(\d+)mW')
+        self._re_pwr = re.compile(r'VDD_IN\s+(\d+)mW(?:/\d+mW)?')
         self._re_ram = re.compile(r'RAM\s+(\d+)/(\d+)MB')
 
     def start(self):
@@ -28,9 +28,12 @@ class TegrastatsMonitor:
             g = self._re_gpu.search(line)
             if g: self.gpu.append(float(g.group(1)))
             p = self._re_pwr.search(line)
-            if p: self.power.append(float(p.group(1)) / 1000.0)  # mW -> W
+            # print(p)
+            if p: 
+                val = p.group(1)
+                self.power.append(float(val) / 1000.0)
             r = self._re_ram.search(line)
-            if r: self.ram_used.append(float(r.group(1)))        # MB usados
+            if r: self.ram_used.append(float(r.group(1)))       
             if self.stop_flag:
                 break
 
@@ -43,5 +46,5 @@ class TegrastatsMonitor:
         if self.thread:
             self.thread.join(timeout=1.0)
 
-        def mean(x): return float(np.mean(x)) if x else 0.0
+        def mean(x): return float(np.mean(x)) if x else np.nan
         return mean(self.gpu), mean(self.power), mean(self.ram_used)

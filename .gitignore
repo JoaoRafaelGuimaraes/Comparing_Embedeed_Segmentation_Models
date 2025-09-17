@@ -1,9 +1,7 @@
-models/
-dataset/
-benchmarks.log
+models/land-seg.onnx
+models/land-segFP16.engine
+models/land-segFP32.engine
 runs/
-outputs/
-benchmarks.log
 venv/
 __pycache__/
 *.pyc

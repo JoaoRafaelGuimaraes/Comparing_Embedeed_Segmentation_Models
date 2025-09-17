@@ -1,0 +1,6 @@
+train: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/train/images
+val: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/valid/images
+test: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/test/images
+
+nc: 1
+names: ['land']
