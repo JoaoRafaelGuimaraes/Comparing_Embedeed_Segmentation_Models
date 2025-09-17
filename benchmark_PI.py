@@ -343,15 +343,17 @@ def benchmark_PI(model: str,
             key = TASK2METRIC.get(infer_model.task, None) 
             print(f'\nA task é {infer_model.task}, métrica principal: {key}\n')
             if key:
-                row[key] = _r(metrics_yolo.get(key))
+                row[f'{key} (YOLO)'] = _r(metrics_yolo.get(key))
 
             
-            for k in ("metrics/precision(B)", "metrics/recall(B)", "metrics/mAP50(B)",
+            for k in ("metrics/precision(B)", "metrics/recall(B)", "metrics/mAP50(B)","metrics/mAP50-95(B)",
                     "metrics/precision(M)", "metrics/recall(M)", "metrics/mAP50(M)"):
-                if k in metrics_yolo:
                     row[f'{k} (YOLO)'] = _r(metrics_yolo[k])
         else:
             print("[val] sem métricas (checar data.yaml, labels e compatibilidade da task)")
+            for k in ("metrics/mAP50-95(M)","metrics/precision(B)", "metrics/recall(B)", "metrics/mAP50(B)","metrics/mAP50-95(B)",
+                    "metrics/precision(M)", "metrics/recall(M)", "metrics/mAP50(M)"):
+                    row[f'{k} (YOLO)'] = f'{np.nan}'
 
         if format == 'engineFP16':
             row['Format'] = 'TensorRT FP16'
