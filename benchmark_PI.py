@@ -190,6 +190,27 @@ def warm_up(model, imgsz, device, test_paths='dataset/landslide_dataset_1000/val
             )
     print('Aquecimento concluído\n')
 
+def get_metrics_CPU(results=None, img_path=None, fmt_label=None, metrics=None):
+    if fmt_label != 'DeepLab':
+        masks = results[0].masks.data.cpu().numpy()  # <-- D2H a cada loop
+        binary_mask = np.any(masks > 0.5, axis=0).astype(np.uint8)
+        prediction = binary_mask * 255
+    else:
+        prediction = results[0].prediction == 1
+    
+    gt_path = img_path.replace('images', 'masks').replace('.jpg', '.png')
+    gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE) > 0
+    prec, rec, iou, f1, acc = compute_metrics(gt, prediction)
+
+    metrics["precision"].append(prec)
+    metrics["recall"].append(rec)
+    metrics["iou"].append(iou)
+    metrics["f1"].append(f1)
+    metrics["accuracy"].append(acc)
+
+    # return metrics
+        
+
 # ----------------------------
 # FUNÇÃO PRINCIPAL 
 # ----------------------------
@@ -251,24 +272,9 @@ def benchmark_PI(model: str,
                 verbose=False
             )
 
-            if fmt_label != 'DeepLab':
-                masks = results[0].masks.data.cpu().numpy()
-                binary_mask = np.any(masks > 0.5, axis=0).astype(np.uint8)  # [H,W] com 0/1
-                prediction = binary_mask * 255
-            else:
-                prediction = results[0].prediction == 1
             
-            gt_path = img_path.replace('images', 'masks').replace('.jpg', '.png')
-            gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE) > 0
-            prec, rec, iou, f1, acc = compute_metrics(gt, prediction)
-
-            metrics["precision"].append(prec)
-            metrics["recall"].append(rec)
-            metrics["iou"].append(iou)
-            metrics["f1"].append(f1)
-            metrics["accuracy"].append(acc)
-            
-            
+            get_metrics_CPU(results, img_path, fmt_label, metrics)
+            # metrics = get_metrics_GPU(results, img_path, fmt_label, metrics)
             inf_time += results[0].speed['inference']  # tempo de inferência em ms
             dt = (time.time() - t0)
             cpu_a, ram_a = get_system_usage(device)
