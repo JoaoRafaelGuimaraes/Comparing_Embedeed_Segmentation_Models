@@ -33,7 +33,7 @@ git clone --recursive https://github.com/JoaoRafaelGuimaraes/Comparing_Embedeed_
   - **CPU** → ONNX, PyTorch , DeepLab  
   - **GPU** → TensorRT (`engineFP32`, `engineFP16`), ONNX, PyTorch (`-`), DeepLab  
 - Resultados exportados automaticamente em CSV.  
-- Suporte para **Jetson** e **Raspberry Pi**.  
+
 
 ---
 
