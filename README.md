@@ -5,6 +5,13 @@ Os benchmarks medem métricas de **tempo de inferência, precisão, recall e F1-
 
 ---
 
+## Como clonar 
+Para ter acesso às imagens e modelos, é necessário clonar o repositório com o seguinte comando:
+
+```bash
+git clone --recursive https://github.com/JoaoRafaelGuimaraes/comparing_YOLO_jetson.git
+```
+
 ## 📌 Estrutura do Projeto  
 
 ```
