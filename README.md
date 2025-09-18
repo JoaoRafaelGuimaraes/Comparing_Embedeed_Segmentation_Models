@@ -6,10 +6,15 @@ Os benchmarks medem métricas de **tempo de inferência, precisão, recall e F1-
 ---
 
 ## Como clonar 
-Para ter acesso às imagens e modelos, é necessário clonar o repositório com o seguinte comando:
+Para ter acesso às imagens e modelos, é necessário instalar o git LFS. Siga os seguintes comandos
 
 ```bash
+sudo apt update
+sudo apt install git-lfs
+git lfs install
 git clone --recursive https://github.com/JoaoRafaelGuimaraes/Comparing_Embedeed_Segmentation_Models.git
+cd Comparing_Embedeed_Segmentation_Models/
+git lfs pull 
 ```
 
 ## 📌 Estrutura do Projeto  
