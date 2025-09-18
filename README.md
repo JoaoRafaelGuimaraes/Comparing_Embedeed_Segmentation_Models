@@ -17,6 +17,8 @@ cd Comparing_Embedeed_Segmentation_Models/
 git lfs pull 
 ```
 
+Após isso, **ATUALIZE O CAMINHO DA PASTA DE IMAGENS EM DATA.YAML**! O caminho em Val deve apontar para a pasta val/images com o caminho absoluto do seu dispositivo!
+
 ## 📌 Estrutura do Projeto  
 
 ```
@@ -29,7 +31,6 @@ git lfs pull
 ├── bench_results.csv     # Resultados principais
 └── README.md
 ```
-
 ---
 
 ## ⚡ Funcionalidades  
