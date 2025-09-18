@@ -6,10 +6,26 @@ Os benchmarks medem métricas de **tempo de inferência, precisão, recall e F1-
 ---
 
 ## Como clonar 
-Para ter acesso às imagens e modelos, é necessário clonar o repositório com o seguinte comando:
+Para ter acesso às imagens e modelos, é necessário instalar o git LFS. Siga os seguintes comandos
 
 ```bash
+sudo apt update
+sudo apt install git-lfs
+git lfs install
 git clone --recursive https://github.com/JoaoRafaelGuimaraes/Comparing_Embedeed_Segmentation_Models.git
+cd Comparing_Embedeed_Segmentation_Models/
+git lfs pull 
+```
+
+Após isso, **ATUALIZE O CAMINHO DA PASTA DE IMAGENS EM DATA.YAML (dataset/landslide_dataset_1000/data.yml)**! O caminho em Val deve apontar para a pasta val/images com o caminho absoluto do seu dispositivo! Apenas o caminho em "val" importa, deixe train e test como estão. Exemplo:
+
+```bash
+train: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/train/images
+val: /home/joaorrafa/Documents/DRONE_RESEARCH/yolo/Comparing_Embedeed_Segmentation_Models/dataset/landslide_dataset_1000/valid/images
+test: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/test/images
+
+nc: 1
+names: ['land']
 ```
 
 ## 📌 Estrutura do Projeto  
@@ -24,7 +40,6 @@ git clone --recursive https://github.com/JoaoRafaelGuimaraes/Comparing_Embedeed_
 ├── bench_results.csv     # Resultados principais
 └── README.md
 ```
-
 ---
 
 ## ⚡ Funcionalidades  
@@ -33,7 +48,7 @@ git clone --recursive https://github.com/JoaoRafaelGuimaraes/Comparing_Embedeed_
   - **CPU** → ONNX, PyTorch , DeepLab  
   - **GPU** → TensorRT (`engineFP32`, `engineFP16`), ONNX, PyTorch (`-`), DeepLab  
 - Resultados exportados automaticamente em CSV.  
-- Suporte para **Jetson** e **Raspberry Pi**.  
+
 
 ---
 
