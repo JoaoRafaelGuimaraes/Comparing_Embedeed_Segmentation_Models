@@ -17,10 +17,12 @@ cd Comparing_Embedeed_Segmentation_Models/
 git lfs pull 
 ```
 
-Após isso, **ATUALIZE O CAMINHO DA PASTA DE IMAGENS EM DATA.YAML (dataset/landslide_dataset_1000/data.yml)**! O caminho em Val deve apontar para a pasta val/images com o caminho absoluto do seu dispositivo! Exemplo:
+Após isso, **ATUALIZE O CAMINHO DA PASTA DE IMAGENS EM DATA.YAML (dataset/landslide_dataset_1000/data.yml)**! O caminho em Val deve apontar para a pasta val/images com o caminho absoluto do seu dispositivo! Apenas o caminho em "val" importa, deixe train e test como estão. Exemplo:
 
 ```bash
+train: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/train/images
 val: /home/joaorrafa/Documents/DRONE_RESEARCH/yolo/Comparing_Embedeed_Segmentation_Models/dataset/landslide_dataset_1000/valid/images
+test: /home/jetson/Documents/YOLO_tests/dataset/landslide_dataset_1000/test/images
 
 nc: 1
 names: ['land']
