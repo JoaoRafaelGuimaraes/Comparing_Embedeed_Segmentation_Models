@@ -4,7 +4,8 @@ import pandas as pd
 import sys
 import os
 from benchmark_PI import benchmark_PI
-# Precision, Recall e F1 score
+import shutil
+
 
 if (len(sys.argv) < 2):
     print('Por favor, complete os campos:\npython3 benchmark.py <device> (CPU ou GPU)')
@@ -19,6 +20,11 @@ if len(sys.argv)>2 and sys.argv[2] == '-d' and len(sys.argv)>3:
 print(f'Rodando em uma {arg}, eu um {device}\n')
 formats_CPU = ['onnx', '-', 'deeplab'] #Na cpu, roda apenas onxx e PyTorch
 formats_GPU = ['engineFP32','engineFP16', 'onnx', '-', 'deeplab'] #Na gpu, roda engine, onxx e PyTorch normal
+
+
+# is_jetson = shutil.which("tegrastats") is not None
+# if not is_jetson:
+#     formats_GPU = ['onnx', '-', 'deeplab'] # DESCOMENTE CASO DÊ ERRO EM EXPORTAR O MODELO DEVIDO AO TORCH!!!
 
 my_formats = formats_CPU if arg=='CPU' else formats_GPU
 
