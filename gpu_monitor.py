@@ -14,7 +14,16 @@ class TegrastatsMonitor:
 
         # regex só usado em Jetson
         self._re_gpu = re.compile(r'GR3D_FREQ\s+(\d+)%')
-        self._re_pwr = re.compile(r'VDD_IN\s+(\d+)mW(?:/\d+mW)?')
+        # Cada plataforma Jetson reporta potência total do sistema com nomes diferentes:
+        #   - Jetson Nano  (JetPack 4.x):  POM_5V_IN 2194/2181       (sem sufixo mW)
+        #   - Xavier NX / AGX Xavier (JP5): VDD_IN 3714mW/3714mW
+        #   - Orin Nano / Orin NX (JP5/6):  VDD_IN 4577mW/4577mW
+        #   - AGX Orin (JP5/6):             VIN_SYS_5V0 8186mW/8186mW
+        self._re_pwr_patterns = [
+            re.compile(r'VDD_IN\s+(\d+)mW'),           # Xavier NX, Orin Nano/NX
+            re.compile(r'VIN_SYS_5V0\s+(\d+)mW'),      # AGX Orin
+            re.compile(r'POM_5V_IN\s+(\d+)'),           # Jetson Nano (JetPack 4.x, no mW suffix)
+        ]
         self._re_ram = re.compile(r'RAM\s+(\d+)/(\d+)MB')
 
         if not self.is_jetson:
@@ -45,8 +54,12 @@ class TegrastatsMonitor:
         for line in self.proc.stdout:
             g = self._re_gpu.search(line)
             if g: self.gpu.append(float(g.group(1)))
-            p = self._re_pwr.search(line)
-            if p: self.power.append(float(p.group(1)) / 1000.0)
+            # Tenta cada padrão de potência (VDD_IN, VIN_SYS_5V0, POM_5V_IN)
+            for pat in self._re_pwr_patterns:
+                p = pat.search(line)
+                if p:
+                    self.power.append(float(p.group(1)) / 1000.0)
+                    break
             r = self._re_ram.search(line)
             if r: self.ram_used.append(float(r.group(1)))
             if self.stop_flag: break

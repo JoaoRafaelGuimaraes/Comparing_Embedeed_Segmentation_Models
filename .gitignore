@@ -5,3 +5,5 @@ runs/
 venv/
 __pycache__/
 *.pyc
+.venv/
+*.cache

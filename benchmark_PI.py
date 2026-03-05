@@ -1,5 +1,5 @@
 
-import os, time, glob, yaml, math, shutil
+import os, time, glob, yaml, math, shutil, traceback
 import numpy as np
 import psutil
 from pathlib import Path
@@ -15,37 +15,38 @@ PROC = psutil.Process(os.getpid())
 PID = os.getpid()
 
 
+def read_jetson_temperatures():
+    """Lê temperaturas de todas as zonas térmicas do SoC (°C).
+    Retorna dict {nome: temp_celsius}."""
+    temps = {}
+    thermal_base = "/sys/devices/virtual/thermal"
+    try:
+        for tz in sorted(os.listdir(thermal_base)):
+            if not tz.startswith("thermal_zone"):
+                continue
+            tz_path = os.path.join(thermal_base, tz)
+            try:
+                name_path = os.path.join(tz_path, "type")
+                temp_path = os.path.join(tz_path, "temp")
+                with open(name_path, "rb") as f:
+                    name = f.read().decode("utf-8", errors="replace").strip()
+                with open(temp_path, "rb") as f:
+                    raw = f.read().decode("utf-8", errors="replace").strip()
+                if raw:
+                    temp_mc = int(raw)
+                    temps[name] = temp_mc / 1000.0
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return temps
+
 
 def get_system_usage(device):
 
     cpu_proc = PROC.cpu_percent(interval=None)
     ram_proc_mb = PROC.memory_info().rss / (1024 ** 2)
     return cpu_proc, ram_proc_mb
-
-def get_tegrastats():
-    try:
-        out = subprocess.check_output(
-            ['tegrastats', '--interval', '1000', '--count', '1'],
-            stderr=subprocess.DEVNULL
-        )
-        line = out.decode('utf-8')
-    except Exception:
-        return 0.0, 0.0, 0.0
-
-    # GPU %
-    gpu_match = re.search(r'GR3D_FREQ (\d+)%', line)
-    gpu_usage = float(gpu_match.group(1)) if gpu_match else 0.0
-
-    # GPU Power (em mW → W)
-    pwr_match = re.search(r'POM_5V_GPU (\d+)mW', line)
-    power_watts = float(pwr_match.group(1))/1000 if pwr_match else 0.0
-
-    # RAM usada (MB)
-    ram_match = re.search(r'RAM (\d+)/(\d+)MB', line)
-    ram_used_mb = float(ram_match.group(1)) if ram_match else 0.0
-    # ram_total_mb = float(ram_match.group(2))  # se quiser o total também
-
-    return gpu_usage, power_watts, ram_used_mb
 
 
 def _format_label(fmt: str) -> str:
@@ -91,15 +92,19 @@ def _export_if_needed(model: YOLO, format: str, device=None):
     else:
         exported = model.export(format=fmt, device=device)
     export_path = None
-    
 
-    if isinstance(exported, str) and os.path.exists(exported):
-        export_path = exported
-    elif hasattr(exported, "save_dir"):
-        ext = "engine" if fmt == "engine" else fmt
-        cands = glob.glob(os.path.join(exported.save_dir, f"*.{ext}"))
-        export_path = cands[0] if cands else None
-    
+    # model.export() pode retornar str, Path, ou objeto com save_dir
+    if exported is not None:
+        exported_str = str(exported)
+        if os.path.exists(exported_str):
+            export_path = exported_str
+        elif hasattr(exported, "save_dir"):
+            ext = "engine" if fmt == "engine" else fmt
+            cands = glob.glob(os.path.join(str(exported.save_dir), f"*.{ext}"))
+            export_path = cands[0] if cands else None
+
+    if export_path is None:
+        raise FileNotFoundError(f"Exportação falhou: nenhum arquivo .{fmt} encontrado após export()")
 
     if format == 'engineFP16':
         new_path = os.path.join(os.path.dirname(export_path), 'land-segFP16.engine')
@@ -250,10 +255,19 @@ def benchmark_PI(model: str,
 
         warm_up(infer_model, imgsz, device)
         monitor = None
-        if device == 0:
-            print(f'Iniciando Monitor_GPU')
+        is_jetson = shutil.which("tegrastats") is not None
+        # Na Jetson, monitorar potência total do SoC mesmo em CPU
+        # (relevante para orçamento energético de UAV)
+        if device == 0 or is_jetson:
+            print('Iniciando Monitor de Hardware')
             monitor = TegrastatsMonitor(interval_ms=100)  # 10 amostras/s
             monitor.start()
+
+        # Temperatura antes da inferência
+        temps_before = read_jetson_temperatures()
+        if temps_before:
+            print(f'Temperatura antes: { {k: f"{v:.1f}°C" for k,v in temps_before.items()} }')
+
         print(f'Testando com {len(val_paths)} imagens!')
         avg_time = []
         cpu_usages, ram_usages = [], []
@@ -291,10 +305,36 @@ def benchmark_PI(model: str,
         fps = (1000.0 / mean_ms) if mean_ms and mean_ms > 0 else 0.0
         throughput = (n_imgs / total_time) if total_time > 0 else 0.0
 
+        # Percentis de latência (importantes para tempo-real em UAV)
+        times_ms = np.array(avg_time) * 1000.0
+        p50 = float(np.percentile(times_ms, 50)) if n_imgs else np.nan
+        p95 = float(np.percentile(times_ms, 95)) if n_imgs else np.nan
+        p99 = float(np.percentile(times_ms, 99)) if n_imgs else np.nan
+
+        # Pico de RAM do processo (MB)
+        ram_peak_mb = float(max(ram_usages)) if ram_usages else np.nan
+
         ###
         gpu_avg = power_avg = ram_total_used_avg = np.nan
         if monitor:
             gpu_avg, power_avg, ram_total_used_avg = monitor.stop_and_get()
+
+        # Energia por imagem (J) = potência (W) × tempo (s)
+        energy_per_img = round(power_avg * (mean_ms / 1000.0), 4) if (power_avg == power_avg and mean_ms == mean_ms) else np.nan
+
+        # Temperatura depois da inferência
+        temps_after = read_jetson_temperatures()
+        if temps_after:
+            print(f'Temperatura depois: { {k: f"{v:.1f}°C" for k,v in temps_after.items()} }')
+        # Maior delta térmico
+        temp_delta_max = np.nan
+        temp_max_after = np.nan
+        if temps_before and temps_after:
+            common = set(temps_before) & set(temps_after)
+            if common:
+                deltas = {k: temps_after[k] - temps_before[k] for k in common}
+                temp_delta_max = round(max(deltas.values()), 1)
+                temp_max_after = round(max(temps_after[k] for k in common), 1)
 
         metrics_yolo = get_val_metrics(infer_model, data=data, imgsz=imgsz, device=device)
 
@@ -311,17 +351,26 @@ def benchmark_PI(model: str,
 
             # --- desempenho ---
             'Inference Time(ms/im)': round(inf_time, 2) if inf_time == inf_time else np.nan,
-            "Avarage Processing Time (ms/im)": round(mean_ms, 2) if mean_ms == mean_ms else np.nan,
+            "Avg Processing Time (ms/im)": round(mean_ms, 2) if mean_ms == mean_ms else np.nan,
+            "Latency P50 (ms)": round(p50, 2),
+            "Latency P95 (ms)": round(p95, 2),
+            "Latency P99 (ms)": round(p99, 2),
             "FPS": round(fps, 2),
             "Throughput (img/s)": round(throughput, 2),
 
             # --- recursos ---
             "cpu_proc_avg (%)": round(float(np.mean(cpu_usages)) if cpu_usages else np.nan, 2),
-            "ram_proc_mb (MB)": round(float(np.mean(ram_usages)) if ram_usages else np.nan, 1),
+            "ram_proc_avg (MB)": round(float(np.mean(ram_usages)) if ram_usages else np.nan, 1),
+            "ram_proc_peak (MB)": round(ram_peak_mb, 1),
 
             "gpu_avg (%)": round(gpu_avg, 2) if gpu_avg==gpu_avg else np.nan,
             "power_avg (W)": round(power_avg, 2) if power_avg==power_avg else np.nan,
+            "energy_per_img (J)": energy_per_img,
             "ram_total_mb (MB)": round(ram_total_used_avg, 1) if ram_total_used_avg==ram_total_used_avg else np.nan,
+
+            # --- térmico ---
+            "temp_max_after (°C)": temp_max_after,
+            "temp_delta_max (°C)": temp_delta_max,
 
             # --- métricas de validação ---
 
@@ -364,6 +413,7 @@ def benchmark_PI(model: str,
 
 
     except Exception as e:
+        traceback.print_exc()
         return [{
             "Format": _format_label(format),
             "Status❔": f"❌ {type(e).__name__}",
